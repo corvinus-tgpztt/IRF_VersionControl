@@ -7,72 +7,162 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using UserMaintenance.Entities;
-using System.IO;
-
-
+using System.Data.Entity;
+using Excel = Microsoft.Office.Interop.Excel;
+using System.Reflection;
 
 namespace UserMaintenance
 {
     public partial class Form1 : Form
     {
-        BindingList<User> users = new BindingList<User>();
+
+        RealEstateEntities context = new RealEstateEntities();
+        List<Flat> Flats;
+
+        Excel.Application xlApp; // A Microsoft Excel alkalmazás
+        Excel.Workbook xlWB; // A létrehozott munkafüzet
+        Excel.Worksheet xlSheet; // Munkalap a munkafüzeten belül
+
         public Form1()
         {
             InitializeComponent();
-            label1.Text = Resource1.FullName;
-            button2.Text = Resource1.Save_in_file;
-            button1.Text = Resource1.Add;
-            button3.Text = Resource1.Delete;
-
-            listBox1.DataSource = users;
-            listBox1.ValueMember = "ID";
-            listBox1.DisplayMember = "FullName";
-
-
-           
+            LoadData();
+            CreateExcel();
         }
 
-        private void button2_Click(object sender, EventArgs e)
+
+        private void LoadData()
         {
-            SaveFileDialog mentes = new SaveFileDialog() {
-               
-                DefaultExt = "txt",
-                Filter = "txt files (*.txt)|*.txt",
-                FilterIndex = 2,
-                RestoreDirectory = true,
+            Flats = context.Flats.ToList();
+        }
 
 
-            };
+        private void CreateExcel()
+        {
 
-            
-            
-
-            if (mentes.ShowDialog() == DialogResult.OK)
+            try
             {
-                StreamWriter r = File.CreateText(mentes.FileName);
-                foreach (var item in users)
+                // Excel elindítása és az applikáció objektum betöltése
+                xlApp = new Excel.Application();
+
+                // Új munkafüzet
+                xlWB = xlApp.Workbooks.Add(Missing.Value);
+
+                // Új munkalap
+                xlSheet = xlWB.ActiveSheet;
+
+                // Tábla létrehozása
+                CreateTable(); 
+
+                // Control átadása a felhasználónak
+                xlApp.Visible = true;
+                xlApp.UserControl = true;
+            }
+            catch (Exception ex)
+            {
+                string errMsg = string.Format("Error: {0}\nLine: {1}", ex.Message, ex.Source);
+                MessageBox.Show(errMsg, "Error");
+
+                // Hiba esetén az Excel applikáció bezárása automatikusan
+                xlWB.Close(false, Type.Missing, Type.Missing);
+                xlApp.Quit();
+                xlWB = null;
+                xlApp = null;
+            }
+
+        }
+
+        private void CreateTable()
+        {
+            string[] headers = new string[] {
+                                              "Kód",
+                                              "Eladó",
+                                              "Oldal",
+                                              "Kerület",
+                                              "Lift",
+                                              "Szobák száma",
+                                              "Alapterület (m2)",
+                                              "Ár (mFt)",
+                                              "Négyzetméter ár (Ft/m2)"
+             };
+            for (int i = 0; i < headers.Length; i++)
+            {
+                xlSheet.Cells[1, i + 1] = headers[i];
+            }
+
+            object[,] values = new object[Flats.Count, headers.Length];
+
+            int counter = 0;
+            foreach (Flat f in Flats)
+            {
+                values[counter, 0] = f.Code;
+                values[counter, 1] = f.Vendor;
+                values[counter, 2] = f.Side;
+                values[counter, 3] = f.District;
+
+                if (f.Elevator)
                 {
-                    r.WriteLine(item.ID + " " + item.FullName);
+                    values[counter, 4] = "Van";
                 }
-                r.Close();
+                else
+                {
+                    values[counter, 4] = "Nincs";
+                }
+                                
+                values[counter, 5] = f.NumberOfRooms;
+                values[counter, 6] = f.FloorArea;
+                values[counter, 7] = f.Price;
+                values[counter, 8] = "="+GetCell(counter+2,1+7)+"*"+GetCell(counter+2,1+6);
+                counter++;
             }
 
+            xlSheet.get_Range(
+             GetCell(2, 1),
+             GetCell(1 + values.GetLength(0), values.GetLength(1))).Value2 = values;
+
+            Excel.Range headerRange = xlSheet.get_Range(GetCell(1, 1), GetCell(1, headers.Length));
+            headerRange.Font.Bold = true;
+            headerRange.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
+            headerRange.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+            headerRange.EntireColumn.AutoFit();
+            headerRange.RowHeight = 40;
+            headerRange.Interior.Color = Color.LightBlue;
+            headerRange.BorderAround2(Excel.XlLineStyle.xlContinuous, Excel.XlBorderWeight.xlThick);
+
+            Excel.Range bodyRange = xlSheet.get_Range(GetCell(2, 1), GetCell(xlSheet.UsedRange.Rows.Count, headers.Length));
+            Excel.Range bodyFirstRange = xlSheet.get_Range(GetCell(2, 1), GetCell(xlSheet.UsedRange.Rows.Count, 1));
+            Excel.Range bodyLastRange = xlSheet.get_Range(GetCell(2, headers.Length), GetCell(xlSheet.UsedRange.Rows.Count, headers.Length));
+            bodyRange.BorderAround2(Excel.XlLineStyle.xlContinuous, Excel.XlBorderWeight.xlThick);
+            bodyFirstRange.Font.Bold = true;
+            bodyLastRange.Interior.Color = Color.LightGreen;
+            bodyLastRange.NumberFormat = "0.00";
+
+
+            
+
+
+
 
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private string GetCell(int x, int y)
         {
-            var u = new User(){FullName = textBox1.Text};
-            users.Add(u);
-        }
+            string ExcelCoordinate = "";
+            int dividend = y;
+            int modulo;
 
-        private void button3_Click(object sender, EventArgs e)
-        {
-            if (listBox1.SelectedItem != null)
+            while (dividend > 0)
             {
-                users.Remove((User)listBox1.SelectedItem);
+                modulo = (dividend - 1) % 26;
+                ExcelCoordinate = Convert.ToChar(65 + modulo).ToString() + ExcelCoordinate;
+                dividend = (int)((dividend - modulo) / 26);
             }
+            ExcelCoordinate += x.ToString();
+
+            return ExcelCoordinate;
         }
+
+
+
     }
 }
