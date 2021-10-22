@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{8188FBD5-CE05-444D-84B0-77C0F3F950BF}</ProjectGuid>
+    <ProjectGuid>{188E27C2-74D3-4BD7-82CB-95C2A5AB2DE7}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>week5</RootNamespace>
-    <AssemblyName>week5</AssemblyName>
+    <RootNamespace>Week5</RootNamespace>
+    <AssemblyName>Week5</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

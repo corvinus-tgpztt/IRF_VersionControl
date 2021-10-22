@@ -1,5 +1,5 @@
 ﻿
-namespace week5
+namespace Week5
 {
     partial class Form1
     {
