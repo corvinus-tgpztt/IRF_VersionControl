@@ -13,10 +13,10 @@ namespace Week5
     using System.Data.Entity;
     using System.Data.Entity.Infrastructure;
     
-    public partial class PortfolioEntities : DbContext
+    public partial class PortfolioEntities1 : DbContext
     {
-        public PortfolioEntities()
-            : base("name=PortfolioEntities")
+        public PortfolioEntities1()
+            : base("name=PortfolioEntities1")
         {
         }
     
@@ -25,6 +25,6 @@ namespace Week5
             throw new UnintentionalCodeFirstException();
         }
     
-        public virtual DbSet<Tick> Ticks { get; set; }
+        public virtual DbSet<Tick> Tick { get; set; }
     }
 }
