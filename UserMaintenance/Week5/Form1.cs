@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +17,8 @@ namespace Week5
         PortfolioEntities1 context = new PortfolioEntities1();
         List<PortfolioItem> Portfolio = new List<PortfolioItem>();
        public List<Tick> Ticks;
+        List<decimal> Nyereségek = new List<decimal>();
+
 
         public Form1()
         {
@@ -23,7 +26,7 @@ namespace Week5
             Ticks = context.Tick.ToList();
             dataGridView1.DataSource = Ticks;
             CreatePortfolio();
-            List<decimal> Nyereségek = new List<decimal>();
+            
             int intervalum = 30;
             DateTime kezdőDátum = (from x in Ticks select x.TradingDay).Min();
             DateTime záróDátum = new DateTime(2016, 12, 30);
@@ -36,7 +39,7 @@ namespace Week5
                 Console.WriteLine(i + " " + ny);
             }
 
-            var nyereségekRendezve = (from x in Nyereségek
+             var nyereségekRendezve = (from x in Nyereségek
                                       orderby x
                                       select x)
                                         .ToList();
@@ -68,7 +71,32 @@ namespace Week5
 
         private void button1_Click(object sender, EventArgs e)
         {
+            SaveFileDialog mentes = new SaveFileDialog()
+            {
 
+                DefaultExt = "txt",
+                Filter = "txt files (*.txt)|*.txt",
+                FilterIndex = 2,
+                RestoreDirectory = true,
+
+
+            };
+
+
+
+
+            if (mentes.ShowDialog() == DialogResult.OK)
+            {
+                StreamWriter r = File.CreateText(mentes.FileName);
+                r.WriteLine("Időszak ,Nyereseg");
+                int index = 0;
+                foreach (var item in Nyereségek)
+                {
+                    r.WriteLine(index + " "+ item);
+                    index++;
+                }
+                r.Close();
+            }
         }
     }
 }
