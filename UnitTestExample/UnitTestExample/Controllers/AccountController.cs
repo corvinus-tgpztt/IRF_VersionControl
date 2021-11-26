@@ -33,7 +33,8 @@ namespace UnitTestExample.Controllers
             var account = new Account()
             {
                 Email = email,
-                Password = password
+                Password = password,
+                ID = Guid.NewGuid()
             };
 
             var newAccount = AccountManager.CreateAccount(account);
@@ -50,7 +51,18 @@ namespace UnitTestExample.Controllers
 
         public bool ValidatePassword(string password)
         {
-            return true;
+            var longEnough = new Regex(@"([a-z]|[A-Z]|[0-9]){8,}");
+            var hasLowerCase = new Regex(@"([a-z])+");
+            var hasUpperCase = new Regex(@"([A-Z])+");
+            var hasNumber = new Regex(@"([0-9])+");
+            if (longEnough.IsMatch(password) && hasLowerCase.IsMatch(password) && hasUpperCase.IsMatch(password) && hasNumber.IsMatch(password))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }
